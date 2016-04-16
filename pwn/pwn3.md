@@ -101,7 +101,8 @@ wr(MEM + '\n')
 print sock.recv(8192)
 print sock.recv(8192)
 print sock.recv(8192)
-print sock.recv(8192)```
+print sock.recv(8192)
+```
 
 Some other notes:
 
